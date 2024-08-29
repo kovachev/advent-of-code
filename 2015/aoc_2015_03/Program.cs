@@ -2,7 +2,7 @@
 
 internal class Program
 {
-    internal static void Main(bool isPart1)
+    internal static void Main(bool isPart1 = false)
     {
         Console.WriteLine("Advent of Code 2015 - 03");
 
