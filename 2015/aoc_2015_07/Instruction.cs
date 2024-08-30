@@ -7,10 +7,14 @@ internal class Instruction
     private readonly string _destination;
     private readonly Operation _operation;
     
+    private readonly PlugBoard _plugBoard;
+    
     public bool IsExecuted { get; private set; }
 
-    internal Instruction(string instruction)
+    internal Instruction(string instruction, PlugBoard plugBoard)
     {
+        _plugBoard = plugBoard ?? throw new ArgumentNullException(nameof(plugBoard));
+        
         var parts = instruction.Split(" ");
         
         if (parts.Length == 3)
@@ -55,15 +59,15 @@ internal class Instruction
         }
     }
     
-    public void Execute(ref Dictionary<string, ushort> variables)
+    public void Execute()
     {
         if (IsExecuted)
         {
             return;
         }
         
-        var operand1Value = GetValue(_operand1, ref variables);
-        var operand2Value = _operand2 == null ? null : GetValue(_operand2, ref variables);
+        var operand1Value = _plugBoard.GetValue(_operand1);
+        var operand2Value = _operand2 == null ? null : _plugBoard.GetValue(_operand2);
         
         if (operand1Value == null)
         {
@@ -91,23 +95,26 @@ internal class Instruction
             return;
         }
         
-        variables[_destination] = (ushort)result;
+        _plugBoard.SetValue(_destination, (ushort)result);
         
         IsExecuted = true;
     }
-    
-    private static ushort? GetValue(string operand, ref Dictionary<string, ushort> variables)
+
+    public bool CanExecute()
     {
-        if (ushort.TryParse(operand, out var value))
+        var operand1Value = _plugBoard.GetValue(_operand1);
+        var operand2Value = _operand2 == null ? null : _plugBoard.GetValue(_operand2);
+        
+        if (operand1Value == null)
         {
-            return value;
+            return false;
+        }
+        
+        if (operand2Value == null && _operation != Operation.Not && _operation != Operation.Assign)
+        {
+            return false;
         }
 
-        if (variables.TryGetValue(operand, out value))
-        {
-            return value;
-        }
-
-        return null;
+        return true;
     }
 }
