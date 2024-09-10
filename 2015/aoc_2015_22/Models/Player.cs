@@ -10,6 +10,8 @@ internal class Player
 
     public IList<Spell> ActiveSpells { get; set; } = new List<Spell>();
 
+    public IList<string> SpellsHistory { get; set; } = new List<string>();
+    
     public Player(int hitPoints, int mana, int manaSpent)
     {
         HitPoints = hitPoints;
@@ -24,6 +26,11 @@ internal class Player
         foreach (var activeSpell in ActiveSpells)
         {
             clone.ActiveSpells.Add(activeSpell.Clone());
+        }
+        
+        foreach (var spellName in SpellsHistory)
+        {
+            clone.SpellsHistory.Add(spellName);
         }
         
         return clone;

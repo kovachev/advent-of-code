@@ -7,6 +7,12 @@ internal class GameState
     public Boss Boss { get; set; } = new(hitPoints: 58, damage: 9);
 
     public int ManaLimit { get; set; } = 500;
+
+    public int Depth { get; set; }
+    
+    public bool IsHardMode { get; set; }
+    
+    public bool Debug { get; set; }
     
     public GameState Clone()
     {
@@ -14,16 +20,33 @@ internal class GameState
         {
             Player = Player.Clone(),
             Boss = Boss.Clone(),
-            ManaLimit = ManaLimit
+            ManaLimit = ManaLimit,
+            Depth = Depth + 1,
+            IsHardMode = IsHardMode,
+            Debug = Debug
         };
 
         return clone;
+    }
+    
+    public GameState DamagePlayer(int damage)
+    {
+        if (Player.HitPoints <= 0 || Boss.HitPoints <= 0)
+        {
+            PrintSpells();
+            return this;
+        }
+        
+        var newState = Clone();
+        newState.Player.HitPoints -= damage;
+        return newState;
     }
 
     public GameState ApplyEffects()
     {
         if (Player.HitPoints <= 0 || Boss.HitPoints <= 0)
         {
+            PrintSpells();
             return this;
         }
 
@@ -36,6 +59,24 @@ internal class GameState
         foreach (var activeSpell in newState.Player.ActiveSpells)
         {
             activeSpell.Turns--;
+
+            if (Debug)
+            {
+                switch (activeSpell.Name)
+                {
+                    case SpellName.Shield:
+                        Console.WriteLine($"[{Depth}] {activeSpell.Name} adds {activeSpell.Armor} armor; its timer is now {activeSpell.Turns}.");
+                        break;
+
+                    case SpellName.Poison:
+                        Console.WriteLine($"[{Depth}] {activeSpell.Name} deals {activeSpell.Damage} damage; its timer is now {activeSpell.Turns}.");
+                        break;
+
+                    case SpellName.Recharge:
+                        Console.WriteLine($"[{Depth}] {activeSpell.Name} provides {activeSpell.Mana} mana; its timer is now {activeSpell.Turns}.");
+                        break;
+                }
+            }
         }
 
         newState.Player.ActiveSpells = newState.Player
@@ -45,29 +86,16 @@ internal class GameState
 
         return newState;
     }
-    
-    public GameState HitPlayer(int damage)
-    {
-        if (Player.HitPoints <= 0 || Boss.HitPoints <= 0)
-        {
-            return this;
-        }
-
-        var newState = Clone();
-     
-        newState.Player.HitPoints -= damage;
-
-        return newState;
-    }
 
     public GameState BossTurn()
     {
         if (Player.HitPoints <= 0 || Boss.HitPoints <= 0)
         {
+            PrintSpells();
             return this;
         }
 
-        Console.WriteLine("-- Boss turn --");
+        if (Debug) Console.WriteLine($"[{Depth}] -- Boss turn --");
         Print();
         
         var newState = Clone();
@@ -76,7 +104,7 @@ internal class GameState
         
         var totalDamage = Math.Max(1, newState.Boss.Damage - playerArmor);
 
-        Console.WriteLine($"Boss attacks for {totalDamage} damage.");
+        if (Debug) Console.WriteLine($"[{Depth}] Boss attacks for {totalDamage} damage.");
         
         newState.Player.HitPoints -= totalDamage;
 
@@ -87,11 +115,12 @@ internal class GameState
     {
         if (Player.HitPoints <= 0 || Boss.HitPoints <= 0)
         {
+            PrintSpells();
             yield return this;
             yield break;
         }
         
-        Console.WriteLine("-- Player turn --");
+        if (Debug) Console.WriteLine($"[{Depth}] -- Player turn --");
         Print();
 
         if (CanCastSpell(SpellName.MagicMissile))
@@ -100,7 +129,11 @@ internal class GameState
             var spell = Spell.GetSpell(SpellName.MagicMissile);
             clone.Player.Mana -= spell.Cost;
             clone.Player.ManaSpent += spell.Cost;
+            clone.Player.SpellsHistory.Add(spell.Name);
             clone.Boss.HitPoints -= spell.Damage;
+            
+            if (Debug) Console.WriteLine($"[{Depth}] Player casts Magic Missile, dealing 4 damage.");
+            
             yield return clone;
         }
         
@@ -110,8 +143,12 @@ internal class GameState
             var spell = Spell.GetSpell(SpellName.Drain);
             clone.Player.Mana -= spell.Cost;
             clone.Player.ManaSpent += spell.Cost;
-            clone.Boss.HitPoints -= spell.Damage;
             clone.Player.HitPoints += spell.Heal;
+            clone.Player.SpellsHistory.Add(spell.Name);
+            clone.Boss.HitPoints -= spell.Damage;
+            
+            if (Debug) Console.WriteLine($"[{Depth}] Player casts Drain, dealing 2 damage and healing 2 hit points.");
+            
             yield return clone;
         }
         
@@ -122,6 +159,10 @@ internal class GameState
             clone.Player.Mana -= spell.Cost;
             clone.Player.ManaSpent += spell.Cost;
             clone.Player.ActiveSpells.Add(spell);
+            clone.Player.SpellsHistory.Add(spell.Name);
+            
+            if (Debug) Console.WriteLine($"[{Depth}] Player casts Shield.");
+            
             yield return clone;
         }
         
@@ -132,6 +173,10 @@ internal class GameState
             clone.Player.Mana -= spell.Cost;
             clone.Player.ManaSpent += spell.Cost;
             clone.Player.ActiveSpells.Add(spell);
+            clone.Player.SpellsHistory.Add(spell.Name);
+            
+            if (Debug) Console.WriteLine($"[{Depth}] Player casts Poison.");
+            
             yield return clone;
         }
         
@@ -142,6 +187,10 @@ internal class GameState
             clone.Player.Mana -= spell.Cost;
             clone.Player.ManaSpent += spell.Cost;
             clone.Player.ActiveSpells.Add(spell);
+            clone.Player.SpellsHistory.Add(spell.Name);
+            
+            if (Debug) Console.WriteLine($"[{Depth}] Player casts Recharge.");
+            
             yield return clone;
         }
     }
@@ -157,8 +206,33 @@ internal class GameState
     
     private void Print()
     {
+        if (!Debug)
+        {
+            return;
+        }
+        
         var playerArmor = Player.ActiveSpells.Sum(spell => spell.Armor);
-        Console.WriteLine($"- Player has {Player.HitPoints} hit points, {playerArmor} armor, {Player.Mana} mana");
-        Console.WriteLine($"- Boss has {Boss.HitPoints} hit points");
+        Console.WriteLine($"[{Depth}] - Player has {Player.HitPoints} hit points, {playerArmor} armor, {Player.Mana} mana, {Player.ManaSpent} mana spent");
+        Console.WriteLine($"[{Depth}] - Boss has {Boss.HitPoints} hit points");
+    }
+    
+    private void PrintSpells()
+    {
+        if (!Debug)
+        {
+            return;
+        }
+        
+        if (Player.HitPoints <= 0)
+        {
+            Console.WriteLine($"[{Depth}] --- Player died");
+            return;
+        }
+        
+        Console.WriteLine($"[{Depth}] --- Player used {Player.SpellsHistory.Count} spells:");
+        foreach (var spellName in Player.SpellsHistory)
+        {
+            Console.WriteLine($"[{Depth}]   - {spellName}");
+        }
     }
 }
