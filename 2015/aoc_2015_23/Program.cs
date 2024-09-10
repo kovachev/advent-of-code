@@ -1,4 +1,4 @@
-﻿namespace aoc_2015_15;
+﻿namespace aoc_2015_23;
 
 internal class Program
 {

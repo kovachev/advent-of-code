@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace aoc_2015_15;
+namespace aoc_2015_19;
 
 internal class Program
 {
