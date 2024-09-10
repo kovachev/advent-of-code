@@ -2,19 +2,19 @@
 
 public static class Permutations
 {
-    public static IList<IList<string>> Permute(string[] cities)
+    public static IList<IList<T>> Permute<T>(T[] cities)
     {
-        var list = new List<IList<string>>();
+        var list = new List<IList<T>>();
         return DoPermute(cities, 0, cities.Length - 1, list);
     }
 
-    private static IList<IList<string>> DoPermute(string[] cities, int start, int end, IList<IList<string>> list)
+    private static IList<IList<T>> DoPermute<T>(T[] cities, int start, int end, IList<IList<T>> list)
     {
         if (start == end)
         {
             // We have one of our possible n! solutions,
             // add it to the list.
-            list.Add(new List<string>(cities));
+            list.Add(new List<T>(cities));
         }
         else
         {
@@ -29,7 +29,7 @@ public static class Permutations
         return list;
     }
 
-    private static void Swap(ref string a, ref string b)
+    private static void Swap<T>(ref T a, ref T b)
     {
         (a, b) = (b, a);
     }
