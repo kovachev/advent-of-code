@@ -6,10 +6,21 @@ internal class Program
     {
         Console.WriteLine("Advent of Code 2024 - Day 4");
         
+        var sample = File.ReadAllLines("sample.txt");
+        
+        Console.WriteLine($"Part 1 (sample): {Part1(sample)}");
+        Console.WriteLine($"Part 2 (sample): {Part2(sample)}");
+        
         var input = File.ReadAllLines("input.txt");
         
-        // XMAS
+        Console.WriteLine($"Part 1: {Part1(input)}");
+        Console.WriteLine($"Part 2: {Part2(input)}");
+    }
 
+    private static int Part1(string[] input)
+    {
+        // XMAS
+        
         var part1count = 0;
         
         for (var row = 0; row < input.Length; row++)
@@ -44,8 +55,60 @@ internal class Program
                 }
             }
         }
-        
-        Console.WriteLine($"Part 1: {part1count}");
+
+        return part1count;
+    }
+
+    private static int Part2(string[] input)
+    {
+        // X-MAS
+        var part2count = 0;
+
+        for (var row = 0; row < input.Length; row++)
+        {
+            for (var col = 0; col < input.Length; col++)
+            {
+                if (input[row][col] == 'A')
+                {
+                    var aPosition = new Position(row, col);
+
+                    var leftTopPosition = new Position(aPosition.Row - 1, aPosition.Col - 1);
+                    var rightBottomPosition = new Position(aPosition.Row + 1, aPosition.Col + 1);
+                    var rightTopPosition = new Position(aPosition.Row - 1, aPosition.Col + 1);
+                    var leftBottomPosition = new Position(aPosition.Row + 1, aPosition.Col - 1);
+                    
+                    if (!IsValid(input, leftTopPosition) ||
+                        !IsValid(input, rightBottomPosition) ||
+                        !IsValid(input, rightTopPosition) ||
+                        !IsValid(input, leftBottomPosition))
+                    {
+                        continue;
+                    }
+                    
+                    var leftTopLetter = input[leftTopPosition.Row][leftTopPosition.Col];
+                    var rightBottomLetter = input[rightBottomPosition.Row][rightBottomPosition.Col];
+                    var rightTopLetter = input[rightTopPosition.Row][rightTopPosition.Col];
+                    var leftBottomLetter = input[leftBottomPosition.Row][leftBottomPosition.Col];
+                    
+                    if ((leftTopLetter == 'M' && rightTopLetter == 'M' && 
+                        rightBottomLetter == 'S'  && leftBottomLetter == 'S') ||
+                        
+                        (leftTopLetter == 'S' && rightTopLetter == 'S' && 
+                         rightBottomLetter == 'M'  && leftBottomLetter == 'M') ||
+                        
+                        (leftTopLetter == 'S' && rightTopLetter == 'M' && 
+                         rightBottomLetter == 'S'  && leftBottomLetter == 'M') ||
+                        
+                        (leftTopLetter == 'M' && rightTopLetter == 'S' && 
+                         rightBottomLetter == 'M'  && leftBottomLetter == 'S'))
+                    {
+                        part2count++;
+                    }
+                }
+            }
+        }
+
+        return part2count;
     }
     
     private static IEnumerable<Position> GetNeighbours(string[] input, Position position, char letter)
@@ -77,6 +140,20 @@ internal class Program
                 }
             }
         }
+    }
+    
+    private static bool IsValid(string[] input, Position position)
+    {
+        var rows = input.Length;
+        var cols = input[0].Length;
+
+        if (position.Row >= 0 && position.Row < rows &&
+            position.Col >= 0 && position.Col < cols)
+        {
+            return true;
+        }
+
+        return false;
     }
 
     private static bool IsValid(Position[] positions)
