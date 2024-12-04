@@ -91,16 +91,16 @@ internal class Program
                     var leftBottomLetter = input[leftBottomPosition.Row][leftBottomPosition.Col];
                     
                     if ((leftTopLetter == 'M' && rightTopLetter == 'M' && 
-                        rightBottomLetter == 'S'  && leftBottomLetter == 'S') ||
+                         leftBottomLetter == 'S' && rightBottomLetter == 'S') ||
                         
                         (leftTopLetter == 'S' && rightTopLetter == 'S' && 
-                         rightBottomLetter == 'M'  && leftBottomLetter == 'M') ||
+                         leftBottomLetter == 'M' && rightBottomLetter == 'M') ||
                         
                         (leftTopLetter == 'S' && rightTopLetter == 'M' && 
-                         rightBottomLetter == 'S'  && leftBottomLetter == 'M') ||
+                         leftBottomLetter == 'S' && rightBottomLetter == 'M') ||
                         
                         (leftTopLetter == 'M' && rightTopLetter == 'S' && 
-                         rightBottomLetter == 'M'  && leftBottomLetter == 'S'))
+                         leftBottomLetter == 'M' && rightBottomLetter == 'S' ))
                     {
                         part2count++;
                     }
