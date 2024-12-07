@@ -41,7 +41,7 @@ internal class Program
         var values = equation.Values;
         var result = equation.Result;
 
-        if (TrySolve(values, result, 0, values[0], part2, out var solution))
+        if (TrySolve(values, result, index: 0, values[0], part2, out var solution))
         {
             return solution;
         }
@@ -50,7 +50,11 @@ internal class Program
     }
 
     private static bool TrySolve(
-        long[] values, long result, int index, long current, bool part2,
+        long[] values, 
+        long result, 
+        int index, 
+        long current,
+        bool part2,
         out long solution)
     {
         if (index == values.Length - 1)

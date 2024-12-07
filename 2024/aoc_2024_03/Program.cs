@@ -12,6 +12,8 @@ internal class Program
 
         var sum = 0;
         
+        // Initial solution 
+        
         var matches = new Regex(@"mul\((\d{1,3}),(\d{1,3})\)").Matches(input);
         
         var doIndexes = new Regex(@"do\(\)").Matches(input)
@@ -33,6 +35,31 @@ internal class Program
         }
         
         Console.WriteLine($"Part 1: {matches.Sum(GetValue)}");
+        Console.WriteLine($"Part 2: {sum}");
+        
+        // Alternative solution part 2
+        
+        var matchAll = new Regex(@"mul\((\d{1,3}),(\d{1,3})\)|do\(\)|don't\(\)").Matches(input);
+        
+        var enabled = true;
+        sum = 0;
+        
+        foreach (Match match in matchAll)
+        {
+            if (match.Value == "do()")
+            {
+                enabled = true;
+            }
+            else if (match.Value == "don't()")
+            {
+                enabled = false;
+            }
+            else if (enabled)
+            {
+                sum += GetValue(match);
+            }
+        }
+        
         Console.WriteLine($"Part 2: {sum}");
     }
 
