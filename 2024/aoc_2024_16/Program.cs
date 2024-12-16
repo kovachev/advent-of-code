@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Text.Json.Serialization;
 
 namespace aoc_2024_16;
@@ -47,6 +48,8 @@ internal class Program
         File.WriteAllText(PathsFile, json);
 
         Console.WriteLine($"Part 1: {path.Score}");
+
+        Console.ReadLine();
     }
     
     private static Position FindPositions(char[][] map, char target)
@@ -67,14 +70,17 @@ internal class Program
     
     private static PathWithScore? FindPath(char[][] map, Position startPosition, Position endPosition, bool debug = false)
     {
-        var queue = new Stack<(Position Position, Position Direction, int Score)>();
-        queue.Push((startPosition, East, 0));
+        var stack = new ConcurrentStack<(Position Position, Position Direction, int Score)>();
+        stack.Push((startPosition, East, 0));
 
         PathWithScore? result = null; 
         
-        while (queue.Count > 0)
+        while (stack.Count > 0)
         {
-            var current = queue.Pop();
+            if (!stack.TryPop(out var current))
+            {
+                return result;
+            }
             
             var currentPath = ExtractPath(current.Position).ToArray();
             
@@ -109,7 +115,7 @@ internal class Program
                     continue;
                 }
                 
-                queue.Push((neighbourWithParent, direction, newScore));
+                stack.Push((neighbourWithParent, direction, newScore));
 
                 if (debug)
                 {
