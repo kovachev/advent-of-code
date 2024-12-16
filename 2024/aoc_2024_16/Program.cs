@@ -1,5 +1,4 @@
-﻿using System.Collections.Concurrent;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Text.Json.Serialization;
 
 namespace aoc_2024_16;
@@ -19,14 +18,12 @@ internal class Program
 
     private static readonly Position[] Directions = [East, North, South, West];
 
-    private static readonly List<Task> Jobs = new();
-    
     private static void Main()
     {
         Console.WriteLine("Advent of Code 2024 - Day 16");
         
-        //var input = File.ReadAllLines("input.txt");
-        var input = File.ReadAllLines("sample1.txt");
+        var input = File.ReadAllLines("input.txt");
+        //var input = File.ReadAllLines("sample1.txt");
         //var input = File.ReadAllLines("sample2.txt");
 
         var map = input.Select(x => x.ToCharArray()).ToArray();
@@ -47,9 +44,9 @@ internal class Program
         var json = System.Text.Json.JsonSerializer.Serialize(path);
         File.WriteAllText(PathsFile, json);
 
-        Console.WriteLine($"Part 1: {path.Score}");
+        Console.WriteLine($"Part 1: {path?.Score}");
 
-        Console.ReadLine();
+        //Console.ReadLine();
     }
     
     private static Position FindPositions(char[][] map, char target)
@@ -70,24 +67,27 @@ internal class Program
     
     private static PathWithScore? FindPath(char[][] map, Position startPosition, Position endPosition, bool debug = false)
     {
-        var stack = new ConcurrentStack<(Position Position, Position Direction, int Score)>();
-        stack.Push((startPosition, East, 0));
+        var queue = new PriorityQueue<(Position Position, Position Direction), int>();
+        queue.Enqueue((startPosition, East), 0);
 
         PathWithScore? result = null; 
+        var visited = new HashSet<Position>();
         
-        while (stack.Count > 0)
+        while (queue.Count > 0)
         {
-            if (!stack.TryPop(out var current))
+            if (!queue.TryDequeue(out var current, out var score))
             {
                 return result;
             }
             
-            var currentPath = ExtractPath(current.Position).ToArray();
+            visited.Add(current.Position);
+            
+            //var currentPath = ExtractPath(current.Position).ToArray();
             
             foreach (var direction in Directions)
             {
                 var neighbour = current.Position + direction;
-                var newScore = current.Score + (current.Direction == direction ? 1 : 1001);
+                var newScore = score + (current.Direction == direction ? 1 : 1001);
                 if (result != null && result.Score < newScore)
                 {
                     continue;
@@ -95,7 +95,8 @@ internal class Program
                 
                 if (!neighbour.IsOnMap(map) ||
                     map[neighbour.Y][neighbour.X] == WallMark ||
-                    currentPath.Any(p => p.X == neighbour.X && p.Y == neighbour.Y) ||
+                    visited.Any(p => p.X == neighbour.X && p.Y == neighbour.Y) ||
+                    //currentPath.Any(p => p.X == neighbour.X && p.Y == neighbour.Y) ||
                     neighbour == startPosition)
                 {
                     continue;
@@ -115,7 +116,7 @@ internal class Program
                     continue;
                 }
                 
-                stack.Push((neighbourWithParent, direction, newScore));
+                queue.Enqueue((neighbourWithParent, direction), newScore);
 
                 if (debug)
                 {
@@ -163,10 +164,10 @@ internal class Program
         {
             for (var x = 0; x < map[y].Length; x++)
             {
-                var position = positions.SingleOrDefault(p => p.Item1.X == x && p.Item1.Y == y);
-                if (position != default)
+                var position = positions?.SingleOrDefault(p => p.Item1.X == x && p.Item1.Y == y);
+                if (position is not null)
                 {
-                    Console.BackgroundColor = position.Item2;
+                    Console.BackgroundColor = position.Value.Item2;
                 }
                 
                 Console.Write(map[y][x]);
@@ -182,11 +183,27 @@ internal record PathWithScore(Position[] Path, int Score);
 
 internal record Position(int X, int Y, [property: JsonIgnore] Position? Parent = null)
 {
+    public bool IsOnMap(char[][] map) => X >= 0 && X < map[0].Length && Y >= 0 && Y < map.Length;
+    
     public static Position operator +(Position a, Position b) => new(a.X + b.X, a.Y + b.Y);
     
     public static Position operator -(Position a, Position b) => new(a.X - b.X, a.Y - b.Y);
+
+    public virtual bool Equals(Position? other)
+    {
+        if (other == null)
+        {
+            return false;
+        }
+        
+        return X == other.X && Y == other.Y;
+    }
     
-    public bool IsOnMap(char[][] map) => X >= 0 && X < map[0].Length && Y >= 0 && Y < map.Length;
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(X, Y);
+    }
+
     
     public override string ToString()
     {
