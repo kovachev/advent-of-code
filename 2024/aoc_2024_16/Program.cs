@@ -11,19 +11,21 @@ internal class Program
 
     private const string PathsFile = "paths_input.json";
 
-    private static readonly Position East = new Position(-1, 0);
-    private static readonly Position North = new Position(0, -1);
-    private static readonly Position South = new Position(0, 1);
-    private static readonly Position West = new Position(1, 0);
+    private static readonly Position East = new(-1, 0);
+    private static readonly Position North = new(0, -1);
+    private static readonly Position South = new(0, 1);
+    private static readonly Position West = new(1, 0);
 
     private static readonly Position[] Directions = [East, North, South, West];
+
+    private static readonly List<Task> Jobs = new();
     
     private static void Main()
     {
         Console.WriteLine("Advent of Code 2024 - Day 16");
         
-        var input = File.ReadAllLines("input.txt");
-        //var input = File.ReadAllLines("sample1.txt");
+        //var input = File.ReadAllLines("input.txt");
+        var input = File.ReadAllLines("sample1.txt");
         //var input = File.ReadAllLines("sample2.txt");
 
         var map = input.Select(x => x.ToCharArray()).ToArray();
