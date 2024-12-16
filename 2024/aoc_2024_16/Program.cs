@@ -65,6 +65,7 @@ internal class Program
         return new Position(-1, -1);
     }
     
+    // https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm
     private static PathWithScore? FindPath(char[][] map, Position startPosition, Position endPosition, bool debug = false)
     {
         var queue = new PriorityQueue<(Position Position, Position Direction), int>();
