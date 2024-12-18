@@ -1,4 +1,6 @@
-﻿namespace aoc_2024_04;
+﻿using Helpers;
+
+namespace aoc_2024_04;
 
 internal class Program
 {
@@ -6,168 +8,88 @@ internal class Program
     {
         Console.WriteLine("Advent of Code 2024 - Day 4");
         
-        var sample = File.ReadAllLines("sample.txt");
+        var sample = new Map("sample.txt");
         
         Console.WriteLine($"Part 1 (sample): {Part1(sample)}");
         Console.WriteLine($"Part 2 (sample): {Part2(sample)}");
         
-        var input = File.ReadAllLines("input.txt");
+        var input = new Map("input.txt");
         
         Console.WriteLine($"Part 1: {Part1(input)}");
         Console.WriteLine($"Part 2: {Part2(input)}");
     }
 
-    private static int Part1(string[] input)
+    private static int Part1(Map map)
     {
         // XMAS
-        
-        var part1count = 0;
-        
-        for (var row = 0; row < input.Length; row++)
+
+        var count = 0;
+
+        foreach (var (xPosition, _) in map.Where(x => x.Value == 'X'))
         {
-            for (var col = 0; col < input.Length; col++)
+            foreach (var mPosition in map.GetNeighbours(xPosition, c => c == 'M', includeDiagonals: true))
             {
-                if (input[row][col] == 'X')
+                foreach (var aPosition in map.GetNeighbours(mPosition, c => c == 'A', includeDiagonals: true))
                 {
-                    var xPosition = new Position(row, col);
-                    
-                    var mNeighbours = GetNeighbours(input, xPosition, 'M');
-
-                    foreach (var mPosition in mNeighbours)
+                    foreach (var sPosition in map.GetNeighbours(aPosition, c => c == 'S', includeDiagonals: true))
                     {
-                        var aNeighbours = GetNeighbours(input, mPosition, 'A');
+                        var positions = new[] { xPosition, mPosition, aPosition, sPosition };
 
-                        foreach (var aPosition in aNeighbours)
+                        if (Position.AreOnSameRow(positions) ||
+                            Position.AreOnSameColumn(positions) ||
+                            Position.AreOnSameDiagonal(positions))
                         {
-                            var sNeighbours = GetNeighbours(input, aPosition, 'S');
-
-                            foreach (var sPosition in sNeighbours)
-                            {
-                                Position[] positions = [xPosition, mPosition, aPosition, sPosition];
-                                
-                                if (IsValid(positions))
-                                {
-                                    part1count++;
-                                }
-                            }
+                            count++;
                         }
                     }
                 }
             }
         }
 
-        return part1count;
+        return count;
     }
 
-    private static int Part2(string[] input)
+    private static int Part2(Map map)
     {
         // X-MAS
-        var part2count = 0;
+        var count = 0;
 
-        for (var row = 0; row < input.Length; row++)
+        foreach (var (aPosition, _) in map.Where(x => x.Value == 'A'))
         {
-            for (var col = 0; col < input.Length; col++)
-            {
-                if (input[row][col] == 'A')
-                {
-                    var aPosition = new Position(row, col);
+            var leftTopPosition = aPosition + Position.UpLeft;
+            var rightBottomPosition = aPosition + Position.DownRight;
+            var rightTopPosition = aPosition + Position.UpRight;
+            var leftBottomPosition = aPosition + Position.DownLeft;
 
-                    var leftTopPosition = new Position(aPosition.Row - 1, aPosition.Col - 1);
-                    var rightBottomPosition = new Position(aPosition.Row + 1, aPosition.Col + 1);
-                    var rightTopPosition = new Position(aPosition.Row - 1, aPosition.Col + 1);
-                    var leftBottomPosition = new Position(aPosition.Row + 1, aPosition.Col - 1);
-                    
-                    if (!IsValid(input, leftTopPosition) ||
-                        !IsValid(input, rightBottomPosition) ||
-                        !IsValid(input, rightTopPosition) ||
-                        !IsValid(input, leftBottomPosition))
-                    {
-                        continue;
-                    }
-                    
-                    var leftTopLetter = input[leftTopPosition.Row][leftTopPosition.Col];
-                    var rightBottomLetter = input[rightBottomPosition.Row][rightBottomPosition.Col];
-                    var rightTopLetter = input[rightTopPosition.Row][rightTopPosition.Col];
-                    var leftBottomLetter = input[leftBottomPosition.Row][leftBottomPosition.Col];
-                    
-                    if ((leftTopLetter == 'M' && rightTopLetter == 'M' && 
-                         leftBottomLetter == 'S' && rightBottomLetter == 'S') ||
-                        
-                        (leftTopLetter == 'S' && rightTopLetter == 'S' && 
-                         leftBottomLetter == 'M' && rightBottomLetter == 'M') ||
-                        
-                        (leftTopLetter == 'S' && rightTopLetter == 'M' && 
-                         leftBottomLetter == 'S' && rightBottomLetter == 'M') ||
-                        
-                        (leftTopLetter == 'M' && rightTopLetter == 'S' && 
-                         leftBottomLetter == 'M' && rightBottomLetter == 'S' ))
-                    {
-                        part2count++;
-                    }
-                }
+            if (!map.IsOnMap(leftTopPosition) ||
+                !map.IsOnMap(rightBottomPosition) ||
+                !map.IsOnMap(rightTopPosition) ||
+                !map.IsOnMap(leftBottomPosition))
+            {
+                continue;
+            }
+
+            var leftTopLetter = map[leftTopPosition];
+            var rightBottomLetter = map[rightBottomPosition];
+            var rightTopLetter = map[rightTopPosition];
+            var leftBottomLetter = map[leftBottomPosition];
+
+            if ((leftTopLetter == 'M' && rightTopLetter == 'M' &&
+                 leftBottomLetter == 'S' && rightBottomLetter == 'S') ||
+
+                (leftTopLetter == 'S' && rightTopLetter == 'S' &&
+                 leftBottomLetter == 'M' && rightBottomLetter == 'M') ||
+
+                (leftTopLetter == 'S' && rightTopLetter == 'M' &&
+                 leftBottomLetter == 'S' && rightBottomLetter == 'M') ||
+
+                (leftTopLetter == 'M' && rightTopLetter == 'S' &&
+                 leftBottomLetter == 'M' && rightBottomLetter == 'S'))
+            {
+                count++;
             }
         }
 
-        return part2count;
-    }
-    
-    private static IEnumerable<Position> GetNeighbours(string[] input, Position position, char letter)
-    {
-        var neighbours = new List<Position>();
-        
-        foreach (var neighbour in GetNeighbours(position, input.Length, input[0].Length))
-        {
-            if (input[neighbour.Row][neighbour.Col] == letter)
-            {
-                neighbours.Add(neighbour);
-            }
-        }
-
-        return neighbours;
-    }
-    
-    private static IEnumerable<Position> GetNeighbours(Position position, int rows, int cols)
-    {
-        for (var row = position.Row - 1; row <= position.Row + 1; row++)
-        {
-            for (var col = position.Col - 1; col <= position.Col + 1; col++)
-            {
-                if (row >= 0 && row < rows && 
-                    col >= 0 && col < cols && 
-                    (row != position.Row || col != position.Col))
-                {
-                    yield return new Position(row, col);
-                }
-            }
-        }
-    }
-    
-    private static bool IsValid(string[] input, Position position)
-    {
-        var rows = input.Length;
-        var cols = input[0].Length;
-
-        if (position.Row >= 0 && position.Row < rows &&
-            position.Col >= 0 && position.Col < cols)
-        {
-            return true;
-        }
-
-        return false;
-    }
-
-    private static bool IsValid(Position[] positions)
-    {
-        if (positions.All(x => x.Row == positions[0].Row) || // Same row
-            positions.All(x => x.Col == positions[0].Col) || // Same column
-            positions.All(x => x.Row - x.Col == positions[0].Row - positions[0].Col) || // Same diagonal (top-left to bottom-right)
-            positions.All(x => x.Row + x.Col == positions[0].Row + positions[0].Col)) // Same diagonal (top-right to bottom-left)
-        {
-            return true;
-        }
-        
-        return false;
+        return count;
     }
 }
-
-internal record Position(int Row, int Col);
