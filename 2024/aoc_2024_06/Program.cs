@@ -1,4 +1,6 @@
-﻿namespace aoc_2024_06;
+﻿using Helpers;
+
+namespace aoc_2024_06;
 
 internal class Program
 {
@@ -9,95 +11,50 @@ internal class Program
     private const char Wall = '#';
     private const char Start = '^';
     
-    private static char[,] _initialMap = new char[0,0];
+    private static Map _initialMap = new();
     private static Position[] _wallPositions = [];
     private static Position _startPosition = new (0, 0);
     private static readonly HashSet<Position> _loopWalls = [];
     
-    private static async Task Main()
+    private static void Main()
     {
         Console.WriteLine("Advent of Code 2024 - Day 6");
         
-        var input = await File.ReadAllLinesAsync("input.txt");
-        //var input = await File.ReadAllLinesAsync("sample.txt");
-
-        LoadMap(input);
+        _initialMap = new Map("input.txt");
+        //_initialMap = new Map("sample.txt");
         
-        _startPosition = FindStartingPoint(_initialMap);
-        _wallPositions = FindWalls(_initialMap).ToArray();
+        _startPosition = _initialMap.Single(x => x.Value == Start).Position;
+        _wallPositions = _initialMap.Where(x => x.Value == Wall).Select(x => x.Position).ToArray();
         
-        var pathLength = TraverseMap(CloneMap(_initialMap), out var visited);
-        FindLoops(CloneMap(_initialMap), visited);
+        var pathLength = TraverseMap(_initialMap.Clone(), out var visited);
+        FindLoops(_initialMap.Clone(), visited);
 
-        Console.WriteLine($"Start Position: {_startPosition.X},{_startPosition.Y}");
+        Console.WriteLine($"Start Position: {_startPosition}");
         
         Console.WriteLine($"Part 1 (Path Length): {pathLength}");
         Console.WriteLine($"Part 2 (Loops): {_loopWalls.Count}");
     }
-
-    private static void LoadMap(string[] lines)
-    {
-        _initialMap = new char[lines[0].Length, lines.Length];
-        
-        for (var y = 0; y < lines.Length; y++)
-        {
-            for (var x = 0; x < lines[y].Length; x++)
-            {
-                _initialMap[x,y] = lines[y][x];
-            }
-        }
-    }
     
-    private static Position FindStartingPoint(char[,] map)
-    {
-        for (var y = 0; y < map.GetLength(1); y++)
-        {
-            for (var x = 0; x < map.GetLength(0); x++)
-            {
-                if (map[x,y] == Start)
-                {
-                    return new Position(x, y);
-                }
-            }
-        }
-        
-        return new Position(-1, -1);
-    }
-    
-    private static IEnumerable<Position> FindWalls(char[,] map)
-    {
-        for (var y = 0; y < map.GetLength(1); y++)
-        {
-            for (var x = 0; x < map.GetLength(0); x++)
-            {
-                if (map[x,y] == Wall)
-                {
-                    yield return new Position(x, y);
-                }
-            }
-        }
-    }
-    
-    private static void PrintMap(char[,] map, Position[] loopWalls)
+    private static void PrintMap(Map map, Position[] loopWalls)
     {
         Console.Write("    ");
-        for (var x = 0; x < map.GetLength(0); x++)
+        for (var x = 0; x < map.XMax; x++)
         {
             Console.Write(x % 10);
         }
         Console.WriteLine();
         
         Console.Write("    ");
-        for (var x = 0; x < map.GetLength(0); x++)
+        for (var x = 0; x < map.XMax; x++)
         {
             Console.Write('-');
         }
         Console.WriteLine();
         
-        for (var y = 0; y < map.GetLength(1); y++)
+        for (var y = 0; y < map.YMax; y++)
         {
             Console.Write(y.ToString().PadLeft(3, ' ') + "|");
-            for (var x = 0; x < map.GetLength(0); x++)
+            for (var x = 0; x < map.XMax; x++)
             {
                 if (loopWalls.Any(wall => wall == new Position(x, y)))
                 {
@@ -114,23 +71,8 @@ internal class Program
             Console.WriteLine();
         }
     }
-    
-    private static char[,] CloneMap(char[,] source)
-    {
-        var target = new char[source.GetLength(0), source.GetLength(1)];
-        
-        for (var y = 0; y < source.GetLength(1); y++)
-        {
-            for (var x = 0; x < source.GetLength(0); x++)
-            {
-                target[x,y] = source[x,y];
-            }
-        }
-        
-        return target;
-    }
 
-    private static int TraverseMap(char[,] map, out Dictionary<Position, List<Direction>> visited, bool display = false)
+    private static int TraverseMap(Map map, out Dictionary<Position, List<Direction>> visited, bool display = false)
     {
         var position = _startPosition;
         var direction = Direction.Up;
@@ -138,35 +80,35 @@ internal class Program
         visited = new Dictionary<Position, List<Direction>>();
         visited[position] = [direction];
         
-        map[position.X, position.Y] = VisitedVertical;
+        map[position] = VisitedVertical;
         
         var pathLength = 1; // Start position is already visited
         
         while (true)
         {
-            var next = position.Move(direction);
-            if (!next.IsOnMap(map))
+            var next = position.Move(direction.ToPosition());
+            if (!map.IsOnMap(next))
             {
                 break;
             }
 
-            if (map[next.X, next.Y] == Wall)
+            if (map[next] == Wall)
             {
                 direction = direction.TurnRight();
-                map[position.X, position.Y] = VisitedCross;
+                map[position] = VisitedCross;
             }
             else
             {
-                switch (map[next.X, next.Y])
+                switch (map[next])
                 {
                     case Empty:
-                        map[next.X, next.Y] = direction.IsHorizontal() ? VisitedHorizontal : VisitedVertical;
+                        map[next] = direction.IsHorizontal() ? VisitedHorizontal : VisitedVertical;
                         pathLength++;
                         break;
 
                     case VisitedVertical:
                     case VisitedHorizontal:
-                        map[next.X, next.Y] = VisitedCross;
+                        map[next] = VisitedCross;
                         break;
                 }
 
@@ -195,7 +137,7 @@ internal class Program
         return pathLength;
     }
     
-    private static void FindLoops(char[,] map, Dictionary<Position, List<Direction>> visited)
+    private static void FindLoops(Map map, Dictionary<Position, List<Direction>> visited)
     {
         var possibleLoopWallPositions = new List<Position>();
         
@@ -212,8 +154,8 @@ internal class Program
 
                 if (hasWall)
                 {
-                    var wallPosition = position.Move(direction);
-                    if (wallPosition.IsOnMap(map))
+                    var wallPosition = position.Move(direction.ToPosition());
+                    if (map.IsOnMap(wallPosition))
                     {
                         possibleLoopWallPositions.Add(wallPosition);
                     }
@@ -231,7 +173,7 @@ internal class Program
             Console.WriteLine($"Traversing loop candidate {i+1} of {possibleLoopWallPositions.Count}");
             
             var position = possibleLoopWallPositions[i];
-            var mapCopy = CloneMap(map);
+            var mapCopy = map.Clone();
             mapCopy[position.X, position.Y] = Wall;
             
             var pathLength = TraverseMap(mapCopy, out _);
@@ -247,7 +189,7 @@ internal class Program
     
     private static bool HasWallDirectlyInFrontOfCurrentLocation(Position position, Direction currentDirection)
     {
-        var next = position.Move(currentDirection);
+        var next = position.Move(currentDirection.ToPosition());
 
         return _wallPositions.Any(wall => wall == next);
     }

@@ -6,6 +6,11 @@ public class Map: IEnumerable<(Position Position, char Value)>
 {
     private readonly char[][] _map;
 
+    public Map()
+    {
+        _map = [];
+    }
+    
     public Map(string inputFile)
     {
         _map = File.ReadAllLines(inputFile).Select(x => x.ToCharArray()).ToArray();
@@ -42,6 +47,23 @@ public class Map: IEnumerable<(Position Position, char Value)>
         return position.X >= 0 && position.X < XMax && position.Y >= 0 && position.Y < YMax;
     }
 
+    public Map Clone()
+    {
+        return new Map(_map.Select(x => x.ToArray()).ToArray());
+    }
+    
+    public void Print()
+    {
+        for (var y = 0; y < YMax; y++)
+        {
+            for (var x = 0; x < XMax; x++)
+            {
+                Console.Write(_map[y][x]);
+            }
+            Console.WriteLine();
+        }
+    }
+    
     public IEnumerable<Position> GetNeighbours(Position position, bool includeDiagonals = false)
     {
         return GetNeighbours(position, _ => true, includeDiagonals);
