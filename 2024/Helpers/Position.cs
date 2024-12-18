@@ -2,7 +2,7 @@
 
 namespace Helpers;
 
-public record Position(int X, int Y, [property: JsonIgnore] Position Parent = null)
+public record Position(int X, int Y, [property: JsonIgnore] Position? Parent = null)
 {
     public static Position Up => new(0, -1);
     public static Position Down => new(0, 1);
