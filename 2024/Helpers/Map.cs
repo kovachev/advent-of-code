@@ -42,6 +42,23 @@ public class Map: IEnumerable<(Position Position, char Value)>
     
     public int YMax => _map.Length;
 
+    public bool TryGetValue(Position position, out char? value)
+    {
+        if (IsOnMap(position))
+        {
+            value = this[position];
+            return true;
+        }
+
+        value = null;
+        return false;
+    }
+    
+    public char GetOrDefault(Position position, char defaultValue)
+    {
+        return IsOnMap(position) ? this[position] : defaultValue;
+    }
+    
     public bool IsOnMap(Position position)
     {
         return position.X >= 0 && position.X < XMax && position.Y >= 0 && position.Y < YMax;
