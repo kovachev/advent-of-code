@@ -23,6 +23,11 @@ public record Position(int X, int Y, [property: JsonIgnore] Position Parent = nu
     
     public static Position operator -(Position a, Position b) => new(a.X - b.X, a.Y - b.Y);
 
+    public Position Move(Position difference)
+    {
+        return this + difference;
+    }
+    
     public virtual bool Equals(Position? other)
     {
         if (ReferenceEquals(null, other))
