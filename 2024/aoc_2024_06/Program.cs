@@ -4,12 +4,12 @@ namespace aoc_2024_06;
 
 internal class Program
 {
-    private const char Empty = '.';
+    private const char EmptyMarker = '.';
     private const char VisitedCross = '+';
     private const char VisitedVertical = '|';
     private const char VisitedHorizontal = '-';
-    private const char Wall = '#';
-    private const char Start = '^';
+    private const char WallMarker = '#';
+    private const char StartMarker = '^';
     
     private static Map _initialMap = new();
     private static Position[] _wallPositions = [];
@@ -23,8 +23,8 @@ internal class Program
         _initialMap = new Map("input.txt");
         //_initialMap = new Map("sample.txt");
         
-        _startPosition = _initialMap.Single(x => x.Value == Start).Position;
-        _wallPositions = _initialMap.Where(x => x.Value == Wall).Select(x => x.Position).ToArray();
+        _startPosition = _initialMap.Single(x => x.Value == StartMarker).Position;
+        _wallPositions = _initialMap.Where(x => x.Value == WallMarker).Select(x => x.Position).ToArray();
         
         var pathLength = TraverseMap(_initialMap.Clone(), out var visited);
         FindLoops(_initialMap.Clone(), visited);
@@ -72,12 +72,12 @@ internal class Program
         }
     }
 
-    private static int TraverseMap(Map map, out Dictionary<Position, List<Direction>> visited, bool display = false)
+    private static int TraverseMap(Map map, out Dictionary<Position, List<Position>> visited, bool display = false)
     {
         var position = _startPosition;
-        var direction = Direction.Up;
+        var direction = Position.Up;
         
-        visited = new Dictionary<Position, List<Direction>>();
+        visited = new Dictionary<Position, List<Position>>();
         visited[position] = [direction];
         
         map[position] = VisitedVertical;
@@ -86,13 +86,13 @@ internal class Program
         
         while (true)
         {
-            var next = position.Move(direction.ToPosition());
+            var next = position.Move(direction);
             if (!map.IsOnMap(next))
             {
                 break;
             }
 
-            if (map[next] == Wall)
+            if (map[next] == WallMarker)
             {
                 direction = direction.TurnRight();
                 map[position] = VisitedCross;
@@ -101,7 +101,7 @@ internal class Program
             {
                 switch (map[next])
                 {
-                    case Empty:
+                    case EmptyMarker:
                         map[next] = direction.IsHorizontal() ? VisitedHorizontal : VisitedVertical;
                         pathLength++;
                         break;
@@ -137,7 +137,7 @@ internal class Program
         return pathLength;
     }
     
-    private static void FindLoops(Map map, Dictionary<Position, List<Direction>> visited)
+    private static void FindLoops(Map map, Dictionary<Position, List<Position>> visited)
     {
         var possibleLoopWallPositions = new List<Position>();
         
@@ -154,7 +154,7 @@ internal class Program
 
                 if (hasWall)
                 {
-                    var wallPosition = position.Move(direction.ToPosition());
+                    var wallPosition = position.Move(direction);
                     if (map.IsOnMap(wallPosition))
                     {
                         possibleLoopWallPositions.Add(wallPosition);
@@ -174,7 +174,7 @@ internal class Program
             
             var position = possibleLoopWallPositions[i];
             var mapCopy = map.Clone();
-            mapCopy[position.X, position.Y] = Wall;
+            mapCopy[position.X, position.Y] = WallMarker;
             
             var pathLength = TraverseMap(mapCopy, out _);
             if (pathLength == 0)
@@ -187,22 +187,35 @@ internal class Program
         PrintMap(map, _loopWalls.ToArray());
     }
     
-    private static bool HasWallDirectlyInFrontOfCurrentLocation(Position position, Direction currentDirection)
+    private static bool HasWallDirectlyInFrontOfCurrentLocation(Position position, Position currentDirection)
     {
-        var next = position.Move(currentDirection.ToPosition());
+        var next = position.Move(currentDirection);
 
         return _wallPositions.Any(wall => wall == next);
     }
     
-    private static bool HasWallToTheRightOfCurrentDirection(Position position, Direction currentDirection)
+    private static bool HasWallToTheRightOfCurrentDirection(Position position, Position currentDirection)
     {
-        return currentDirection switch
+        if (currentDirection == Position.Up)
         {
-            Direction.Up => _wallPositions.Any(wall => wall.Y == position.Y && wall.X > position.X),
-            Direction.Down => _wallPositions.Any(wall => wall.Y == position.Y && wall.X < position.X),
-            Direction.Right => _wallPositions.Any(wall => wall.X == position.X && wall.Y > position.Y),
-            Direction.Left => _wallPositions.Any(wall => wall.X == position.X && wall.Y < position.Y),
-            _ => throw new ArgumentOutOfRangeException()
-        };
+            return _wallPositions.Any(wall => wall.Y == position.Y && wall.X > position.X);
+        }
+
+        if (currentDirection == Position.Down)
+        {
+            return _wallPositions.Any(wall => wall.Y == position.Y && wall.X < position.X);
+        }
+
+        if (currentDirection == Position.Right)
+        {
+            return _wallPositions.Any(wall => wall.X == position.X && wall.Y > position.Y);
+        }
+
+        if (currentDirection == Position.Left)
+        {
+            return _wallPositions.Any(wall => wall.X == position.X && wall.Y < position.Y);
+        }
+
+        throw new ArgumentOutOfRangeException();
     }
 }

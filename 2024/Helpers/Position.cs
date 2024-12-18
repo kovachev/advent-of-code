@@ -66,4 +66,34 @@ public record Position(int X, int Y, [property: JsonIgnore] Position? Parent = n
         return positions.All(x => x.Y - x.X == first.Y - first.X) || // Same diagonal (top-left to bottom-right)
                positions.All(x => x.Y + x.X == first.Y + first.X); // Same diagonal (top-right to bottom-left)
     }
+    
+    public Position TurnRight()
+    {
+        if (this == Up)
+        {
+            return Right;
+        }
+
+        if (this == Down)
+        {
+            return Left;
+        }
+
+        if (this == Left)
+        {
+            return Up;
+        }
+
+        if (this == Right)
+        {
+            return Down;
+        }
+
+        throw new ArgumentOutOfRangeException();
+    }
+    
+    public bool IsHorizontal()
+    {
+        return this == Left || this == Right;
+    }
 }
