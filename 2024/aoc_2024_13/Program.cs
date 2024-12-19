@@ -17,9 +17,8 @@ internal class Program
 
         var conditions = new List<ButtonsAndPrize>();
         
-        Button buttonA = null;
-        Button buttonB = null;
-        Prize prize = null;
+        Button? buttonA = null;
+        Button? buttonB = null;
         foreach (var line in input)
         {
             if (buttonAExpression.IsMatch(line))
@@ -43,9 +42,9 @@ internal class Program
                 var match = prizeExpression.Match(line);
                 var x = int.Parse(match.Groups["x"].Value);
                 var y = int.Parse(match.Groups["y"].Value);
-                prize = new Prize(x, y);
+                var prize = new Prize(x, y);
                 
-                conditions.Add(new ButtonsAndPrize(buttonA, buttonB, prize));
+                conditions.Add(new ButtonsAndPrize(buttonA!, buttonB!, prize));
             }
         }
 
