@@ -25,6 +25,19 @@ public class Map: IEnumerable<(Position Position, char Value)>
     {
         _map = map;
     }
+    
+    public Map(int xMax, int yMax, char defaultValue = '.')
+    {
+        _map = new char[yMax][];
+        for (var y = 0; y < yMax; y++)
+        {
+            _map[y] = new char[xMax];
+            for (var x = 0; x < xMax; x++)
+            {
+                _map[y][x] = defaultValue;
+            }
+        }
+    }
 
     public char this[int x, int y] 
     {
@@ -57,6 +70,11 @@ public class Map: IEnumerable<(Position Position, char Value)>
     public char GetOrDefault(Position position, char defaultValue)
     {
         return IsOnMap(position) ? this[position] : defaultValue;
+    }
+    
+    public char[] GetRow(int y)
+    {
+        return _map[y];
     }
     
     public bool IsOnMap(Position position)
