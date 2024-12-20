@@ -96,4 +96,9 @@ public record Position(int X, int Y, [property: JsonIgnore] Position? Parent = n
     {
         return this == Left || this == Right;
     }
+    
+    public bool IsVertical()
+    {
+        return this == Up || this == Down;
+    }
 }

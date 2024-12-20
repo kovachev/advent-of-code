@@ -173,4 +173,15 @@ public class Map: IEnumerable<(Position Position, char Value)>
     {
         return GetEnumerator();
     }
+
+    public void Restore(Map mapCopy)
+    {
+        for (var y = 0; y < YMax; y++)
+        {
+            for (var x = 0; x < XMax; x++)
+            {
+                _map[y][x] = mapCopy._map[y][x];
+            }
+        }
+    }
 }
