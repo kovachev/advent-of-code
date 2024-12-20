@@ -28,7 +28,7 @@ internal class Program
 
         Part1(map, moves, debug);
 
-        debug = true;
+        debug = false;
         
         var (wideMap, _) = ParseInput(input, Expand);
 
@@ -188,8 +188,6 @@ internal class Program
                 result += position.X + position.Y * 100;
             }
         }
-
-        map.Print();
 
         Console.WriteLine($"Part 2: {result}");
     }
