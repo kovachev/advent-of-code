@@ -30,17 +30,17 @@ public record Position(int X, int Y, [property: JsonIgnore] Position? Parent = n
     
     public virtual bool Equals(Position? other)
     {
-        if (ReferenceEquals(null, other))
+        if (other is null)
         {
             return false;
         }
-
-        if (ReferenceEquals(this, other))
-        {
-            return true;
-        }
         
         return X == other.X && Y == other.Y;
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(X, Y);
     }
 
     public override string ToString()

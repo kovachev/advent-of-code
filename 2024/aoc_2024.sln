@@ -34,6 +34,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "aoc_2024_15", "aoc_2024_15\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Helpers", "Helpers\Helpers.csproj", "{6CB4999F-C6FE-49F2-9699-FED1C81A5654}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "aoc_2024_18", "aoc_2024_18\aoc_2024_18.csproj", "{C3D44605-842E-447F-9CB2-DA1399F9C763}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -108,5 +110,9 @@ Global
 		{6CB4999F-C6FE-49F2-9699-FED1C81A5654}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6CB4999F-C6FE-49F2-9699-FED1C81A5654}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6CB4999F-C6FE-49F2-9699-FED1C81A5654}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C3D44605-842E-447F-9CB2-DA1399F9C763}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C3D44605-842E-447F-9CB2-DA1399F9C763}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C3D44605-842E-447F-9CB2-DA1399F9C763}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C3D44605-842E-447F-9CB2-DA1399F9C763}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
