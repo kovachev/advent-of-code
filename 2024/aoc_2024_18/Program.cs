@@ -32,8 +32,11 @@ internal class Program
         var startPosition = new Position(0, 0);
         var endPosition = new Position(map.XMax - 1, map.YMax - 1);
         
-        Console.WriteLine($"Looking for path from {startPosition} to {endPosition}.");
+        Console.WriteLine($"Looking for path from {startPosition} [{map[startPosition]}] to {endPosition} [{map[endPosition]}].");
 
+        //map.Print();
+        //return;
+        
         var timestamp = Stopwatch.GetTimestamp();
         
         var path = FindPath(map, startPosition, endPosition, debug: false);
@@ -55,10 +58,17 @@ internal class Program
     // https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm
     private static PathWithScore? FindPath(Map map, Position startPosition, Position endPosition, bool debug = false)
     {
+        if (debug)
+        {
+            Console.Clear();
+            map.Print();
+        }
+        
         var queue = new PriorityQueue<Position, int>();
         queue.Enqueue(startPosition, 0);
 
         PathWithScore? result = null; 
+
         var visited = new HashSet<Position>();
         foreach (var position in map.Where(x => x.Value == WallMarker).Select(x => x.Position))
         {
@@ -82,11 +92,11 @@ internal class Program
                     continue;
                 }
                 
-                if (visited.Any(p => p.Equals(neighbour)))
+                if (visited.Any(p => p.X == neighbour.X && p.Y == neighbour.Y))
                 {
                     continue;
                 }
-
+                
                 var neighbourWithParent = neighbour with { Parent = current };
                 
                 if (neighbour == endPosition)
@@ -98,16 +108,19 @@ internal class Program
                         result = new PathWithScore(path, newScore);
                     }
                     
+                    Console.WriteLine($"Path found with score {newScore}.");
                     continue;
                 }
                 
+                visited.Add(neighbour);
                 queue.Enqueue(neighbourWithParent, newScore);
 
                 if (debug)
                 {
                     var pathWithColor = ExtractPath(neighbourWithParent).Select(p => (p, ConsoleColor.Yellow)).ToList();
                     pathWithColor[0] = (pathWithColor[0].Item1, ConsoleColor.Cyan);
-                    PrintMapWithPath(map, pathWithColor);
+                    //PrintMapWithPath(map, pathWithColor);
+                    ShowPath(map, pathWithColor);
                     Thread.Sleep(50);
                 }
             }
@@ -139,11 +152,34 @@ internal class Program
         
         return path;
     }
+
+    private static IEnumerable<Position>? _prevPositions = null;
+
+    private static void ShowPath(Map map, IEnumerable<(Position, ConsoleColor)> positions)
+    {
+        if (_prevPositions?.Any() == true)
+        {
+            Console.BackgroundColor = ConsoleColor.Black;
+            foreach (var position in _prevPositions)
+            {
+                Console.SetCursorPosition(position.X, position.Y);
+                Console.Write(map[position]);
+            }
+        }
+
+        foreach (var (position, color) in positions)
+        {
+            Console.SetCursorPosition(position.X, position.Y);
+            Console.BackgroundColor = color;
+            Console.Write(map[position]);
+        }
+
+        _prevPositions = positions.Select(x => x.Item1);
+    }
     
     private static void PrintMapWithPath(Map map, IEnumerable<(Position, ConsoleColor)>? positions = null)
     {
         Console.Clear();
-        Console.ResetColor();
         
         for (var y = 0; y < map.YMax; y++)
         {
@@ -153,6 +189,10 @@ internal class Program
                 if (position is not null)
                 {
                     Console.BackgroundColor = position.Value.Item2;
+                }
+                else
+                {
+                    Console.BackgroundColor = ConsoleColor.Black;
                 }
                 
                 Console.Write(map[x , y]);

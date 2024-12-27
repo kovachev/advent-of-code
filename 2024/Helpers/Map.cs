@@ -132,32 +132,40 @@ public class Map: IEnumerable<(Position Position, char Value)>
         
         if (includeDiagonals)
         {
-            var upLeft = position + Position.UpLeft;
-            if (IsOnMap(upLeft) && condition(this[upLeft]))
+            foreach (var neighbour in GetDiagonalNeighbours(position, condition))
             {
-                yield return upLeft;
-            }
-            
-            var upRight = position + Position.UpRight;
-            if (IsOnMap(upRight) && condition(this[upRight]))
-            {
-                yield return upRight;
-            }
-            
-            var downLeft = position + Position.DownLeft;
-            if (IsOnMap(downLeft) && condition(this[downLeft]))
-            {
-                yield return downLeft;
-            }
-            
-            var downRight = position + Position.DownRight;
-            if (IsOnMap(downRight) && condition(this[downRight]))
-            {
-                yield return downRight;
+                yield return neighbour;
             }
         }
     }
 
+    public IEnumerable<Position> GetDiagonalNeighbours(Position position, Func<char, bool> condition)
+    {
+        var upLeft = position + Position.UpLeft;
+        if (IsOnMap(upLeft) && condition(this[upLeft]))
+        {
+            yield return upLeft;
+        }
+            
+        var upRight = position + Position.UpRight;
+        if (IsOnMap(upRight) && condition(this[upRight]))
+        {
+            yield return upRight;
+        }
+            
+        var downLeft = position + Position.DownLeft;
+        if (IsOnMap(downLeft) && condition(this[downLeft]))
+        {
+            yield return downLeft;
+        }
+            
+        var downRight = position + Position.DownRight;
+        if (IsOnMap(downRight) && condition(this[downRight]))
+        {
+            yield return downRight;
+        }
+    }
+    
     public IEnumerator<(Position Position, char Value)> GetEnumerator()
     {
         for (var y = 0; y < YMax; y++)
