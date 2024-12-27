@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using Helpers;
+﻿using Helpers;
 
 namespace aoc_2024_18;
 
@@ -32,21 +31,9 @@ internal class Program
         
         var path = FindPath(map, startPosition, endPosition, debug: false);
 
-        Console.WriteLine($"Part 1: {path?.Score}");
+        Console.WriteLine($"Part 1 {inputFile}: {path?.Score}");
     }
-
-    private static void AddWallsToMap(string[] lines, Map map, int takeSize)
-    {
-        map.Clear();
-        foreach (var line in lines.Take(takeSize))
-        {
-            var parts = line.Split(',');
-            var x = int.Parse(parts[0]);
-            var y = int.Parse(parts[1]);
-            map[x, y] = WallMarker;
-        }
-    }
-
+    
     private static void Part2(string inputFile, Map map, int takeSize)
     {
         var startPosition = new Position(0, 0);
@@ -65,7 +52,19 @@ internal class Program
             }
         }
         
-        Console.WriteLine($"Part 2: {input[lo]}");
+        Console.WriteLine($"Part 2 {inputFile}: {input[lo]}");
+    }
+    
+    private static void AddWallsToMap(string[] lines, Map map, int takeSize)
+    {
+        map.Clear();
+        foreach (var line in lines.Take(takeSize))
+        {
+            var parts = line.Split(',');
+            var x = int.Parse(parts[0]);
+            var y = int.Parse(parts[1]);
+            map[x, y] = WallMarker;
+        }
     }
     
     // https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm
@@ -165,7 +164,7 @@ internal class Program
         return path;
     }
 
-    private static IEnumerable<Position>? _prevPositions = null;
+    private static IEnumerable<Position>? _prevPositions;
 
     private static void ShowPath(Map map, IEnumerable<(Position, ConsoleColor)> positions)
     {
