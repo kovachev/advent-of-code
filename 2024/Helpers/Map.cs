@@ -192,4 +192,15 @@ public class Map: IEnumerable<(Position Position, char Value)>
             }
         }
     }
+
+    public void Clear(char value = '.')
+    {
+        for (var y = 0; y < YMax; y++)
+        {
+            for (var x = 0; x < XMax; x++)
+            {
+                _map[y][x] = value;
+            }
+        }
+    }
 }

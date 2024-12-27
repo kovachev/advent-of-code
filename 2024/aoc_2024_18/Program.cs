@@ -7,52 +7,65 @@ internal class Program
 {
     private const char WallMarker = '#';
 
-    private const string PathsFile = "paths_input.json";
-
     private static void Main()
     {
         Console.WriteLine("Advent of Code 2024 - Day 18");
         
-        var input = File.ReadAllLines("input.txt");
-        var map = new Map(71, 71);
-        var size = 1024;
+        Part1("sample.txt", new Map(7, 7), 12);
         
-        // var input = File.ReadAllLines("sample.txt");
-        // var map = new Map(7, 7);
-        // var size = 12;
+        Part1("input.txt", new Map(71, 71), 1024);
+        
+        Part2("sample.txt", new Map(7, 7), 12);
+        
+        Part2("input.txt", new Map(71, 71), 1024);
+    }
 
-        foreach (var line in input.Take(size))
+    private static void Part1(string inputFile, Map map, int takeSize)
+    {
+        var startPosition = new Position(0, 0);
+        var endPosition = new Position(map.XMax - 1, map.YMax - 1);
+        
+        var input = File.ReadAllLines(inputFile);
+        AddWallsToMap(input, map, takeSize);
+        
+        Console.WriteLine($"Looking for path from {startPosition} [{map[startPosition]}] to {endPosition} [{map[endPosition]}].");
+        
+        var path = FindPath(map, startPosition, endPosition, debug: false);
+
+        Console.WriteLine($"Part 1: {path?.Score}");
+    }
+
+    private static void AddWallsToMap(string[] lines, Map map, int takeSize)
+    {
+        map.Clear();
+        foreach (var line in lines.Take(takeSize))
         {
             var parts = line.Split(',');
             var x = int.Parse(parts[0]);
             var y = int.Parse(parts[1]);
             map[x, y] = WallMarker;
         }
-        
+    }
+
+    private static void Part2(string inputFile, Map map, int takeSize)
+    {
         var startPosition = new Position(0, 0);
         var endPosition = new Position(map.XMax - 1, map.YMax - 1);
         
-        Console.WriteLine($"Looking for path from {startPosition} [{map[startPosition]}] to {endPosition} [{map[endPosition]}].");
-
-        //map.Print();
-        //return;
+        var input = File.ReadAllLines(inputFile);
         
-        var timestamp = Stopwatch.GetTimestamp();
+        var (lo, hi) = (takeSize, input.Length);
+        while (hi - lo > 1) {
+            var m = (lo + hi) / 2;
+            AddWallsToMap(input, map, m);
+            if (FindPath(map, startPosition, endPosition) == null) {
+                hi = m;
+            } else {
+                lo = m;
+            }
+        }
         
-        var path = FindPath(map, startPosition, endPosition, debug: false);
-
-        var elapsed = Stopwatch.GetElapsedTime(timestamp);
-        
-        Console.WriteLine($"Path found in {elapsed:c}.");
-        
-        var json = System.Text.Json.JsonSerializer.Serialize(path);
-        File.WriteAllText(PathsFile, json);
-
-        //PrintMapWithPath(map, path?.Path.Select(p => (p, ConsoleColor.Yellow)));
-
-        Console.WriteLine($"Part 1: {path?.Score}");
-        
-        //Console.ReadLine();
+        Console.WriteLine($"Part 2: {input[lo]}");
     }
     
     // https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm
@@ -108,7 +121,6 @@ internal class Program
                         result = new PathWithScore(path, newScore);
                     }
                     
-                    Console.WriteLine($"Path found with score {newScore}.");
                     continue;
                 }
                 
@@ -159,7 +171,7 @@ internal class Program
     {
         if (_prevPositions?.Any() == true)
         {
-            Console.BackgroundColor = ConsoleColor.Black;
+            Console.BackgroundColor = ConsoleColor.Gray;
             foreach (var position in _prevPositions)
             {
                 Console.SetCursorPosition(position.X, position.Y);
