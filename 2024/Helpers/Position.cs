@@ -101,4 +101,28 @@ public record Position(int X, int Y, [property: JsonIgnore] Position? Parent = n
     {
         return this == Up || this == Down;
     }
+    
+    public IEnumerable<Position> ExtractPath(bool reverse = false)
+    {
+        var path = new List<Position>();
+        
+        var current = this;
+        path.Add(current);
+        
+        while (current != null)
+        {
+            current = current.Parent;
+            if (current != null)
+            {
+                path.Add(current);
+            }
+        }
+
+        if (reverse)
+        {
+            path.Reverse();
+        }
+        
+        return path;
+    }
 }

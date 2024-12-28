@@ -68,7 +68,7 @@ internal class Program
     }
     
     // https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm
-    private static PathWithScore? FindPath(Map map, Position startPosition, Position endPosition, bool debug = false)
+    private static PathAndScore? FindPath(Map map, Position startPosition, Position endPosition, bool debug = false)
     {
         if (debug)
         {
@@ -79,7 +79,7 @@ internal class Program
         var queue = new PriorityQueue<Position, int>();
         queue.Enqueue(startPosition, 0);
 
-        PathWithScore? result = null; 
+        PathAndScore? result = null; 
 
         var visited = new HashSet<Position>();
         foreach (var position in map.Where(x => x.Value == WallMarker).Select(x => x.Position))
@@ -113,11 +113,11 @@ internal class Program
                 
                 if (neighbour == endPosition)
                 {
-                    var path = ExtractPath(neighbourWithParent, reverse: true).ToArray();
+                    var path = neighbourWithParent.ExtractPath(reverse: true).ToArray();
                     
                     if (result == null || result.Score > newScore)
                     {
-                        result = new PathWithScore(path, newScore);
+                        result = new PathAndScore(path, newScore);
                     }
                     
                     continue;
@@ -128,7 +128,7 @@ internal class Program
 
                 if (debug)
                 {
-                    var pathWithColor = ExtractPath(neighbourWithParent).Select(p => (p, ConsoleColor.Yellow)).ToList();
+                    var pathWithColor = neighbourWithParent.ExtractPath().Select(p => (p, ConsoleColor.Yellow)).ToList();
                     pathWithColor[0] = (pathWithColor[0].Item1, ConsoleColor.Cyan);
                     //PrintMapWithPath(map, pathWithColor);
                     ShowPath(map, pathWithColor);
@@ -138,30 +138,6 @@ internal class Program
         }
         
         return result;
-    }
-
-    private static IEnumerable<Position> ExtractPath(Position position, bool reverse = false)
-    {
-        var path = new List<Position>();
-        
-        var current = position;
-        path.Add(current);
-        
-        while (current != null)
-        {
-            current = current.Parent;
-            if (current != null)
-            {
-                path.Add(current);
-            }
-        }
-
-        if (reverse)
-        {
-            path.Reverse();
-        }
-        
-        return path;
     }
 
     private static IEnumerable<Position>? _prevPositions;
@@ -214,5 +190,3 @@ internal class Program
         }
     }
 }
-
-internal record PathWithScore(Position[] Path, int Score);
