@@ -5,7 +5,6 @@ namespace aoc_2024_20;
 internal class Program
 {
     private const char WallMarker = '#';
-    private const char EmptyMarker = '.';
     private const char StartMarker = 'S';
     private const char EndMarker = 'E';
     
@@ -13,12 +12,16 @@ internal class Program
     {
         Console.WriteLine("Advent of Code 2024 - Day 20");
         
-        //Part1("sample.txt");
+        Process("sample.txt", 2, 2);
         
-        Part1("input.txt");
+        Process("input.txt", 2);
+        
+        Process("sample.txt", 20, 2);
+        
+        Process("input.txt", 20);
     }
     
-    private static void Part1(string inputFile)
+    private static void Process(string inputFile, int cheatSize, int minSaving = 100)
     {
         var map = new Map(inputFile);
         
@@ -35,34 +38,32 @@ internal class Program
             return;
         }
         
+        var (path, _) = pathAndScore;
+        
         Console.WriteLine($"[{inputFile}] Path found with score {pathAndScore.Score}.");
 
         var count = 0;
-        var index = 0;
-        foreach (var position in pathAndScore.Path)
+        
+        Parallel.For(0, path.Length, i => Interlocked.Add(ref count, GetCheats(i, path, cheatSize, minSaving)));
+        
+        Console.WriteLine($"[{inputFile}] Count of savings of {minSaving} or more with {cheatSize} cheat size: {count}");
+    }
+
+    private static int GetCheats(int currentPositionIndex, Position[] path, int cheatSize, int minSaving)
+    {
+        var count = 0;
+
+        for (var prevPositionIndex = 0; prevPositionIndex < currentPositionIndex; prevPositionIndex++)
         {
-            index++;
-            Console.WriteLine($"[{inputFile}] Checking position {index}/{pathAndScore.Path.Length}.");
-            
-            var neighbourWalls = map.GetNeighbours(position)
-                                    .Where(p => map[p] == WallMarker)
-                                    .ToArray();
-            
-            foreach (var wall in neighbourWalls)
+            var dist = path[currentPositionIndex].ManhattanDistance(path[prevPositionIndex]);
+            var saving = currentPositionIndex - (prevPositionIndex + dist);
+            if (dist <= cheatSize && saving >= minSaving)
             {
-                var mapCopy = map.Clone();
-                mapCopy[wall] = EmptyMarker;
-                var result = FindPath(mapCopy, startPosition, endPosition);
-                if (result != null && 
-                    (pathAndScore.Score - result.Score) >= 100)
-                {
-                    Console.WriteLine($"[{inputFile}] Found saving of 100 or more.");
-                    count += 1;
-                }
+                count++;
             }
         }
-        
-        Console.WriteLine($"[{inputFile}] Count of savings of 100 or more: {count}");
+
+        return count;
     }
     
     // https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm
@@ -85,13 +86,8 @@ internal class Program
             visited.Add(position);
         }
 
-        while (queue.Count > 0)
+        while (queue.TryDequeue(out var current, out var score))
         {
-            if (!queue.TryDequeue(out var current, out var score))
-            {
-                return result;
-            }
-            
             visited.Add(current);
             
             foreach (var neighbour in map.GetNeighbours(current))

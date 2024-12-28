@@ -125,4 +125,9 @@ public record Position(int X, int Y, [property: JsonIgnore] Position? Parent = n
         
         return path;
     }
+    
+    public int ManhattanDistance(Position other)
+    {
+        return Math.Abs(X - other.X) + Math.Abs(Y - other.Y);
+    }
 }
