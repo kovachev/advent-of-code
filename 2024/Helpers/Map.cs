@@ -4,6 +4,11 @@ namespace Helpers;
 
 public class Map: IEnumerable<(Position Position, char Value)>
 {
+    public const char WallMarker = '#';
+    public const char StartMarker = 'S';
+    public const char EndMarker = 'E';
+    public const char EmptyMarker = '.';
+    
     private readonly char[][] _map;
 
     public Map()
@@ -26,7 +31,7 @@ public class Map: IEnumerable<(Position Position, char Value)>
         _map = map;
     }
     
-    public Map(int xMax, int yMax, char defaultValue = '.')
+    public Map(int xMax, int yMax, char defaultValue = EmptyMarker)
     {
         _map = new char[yMax][];
         for (var y = 0; y < yMax; y++)
@@ -89,6 +94,8 @@ public class Map: IEnumerable<(Position Position, char Value)>
     
     public void Print()
     {
+        _prevPositions = null;
+        
         for (var y = 0; y < YMax; y++)
         {
             for (var x = 0; x < XMax; x++)
@@ -202,5 +209,96 @@ public class Map: IEnumerable<(Position Position, char Value)>
                 _map[y][x] = value;
             }
         }
+    }
+    
+    // https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm
+    public PathAndScore? FindPath(Position startPosition, Position endPosition, bool debug = false)
+    {
+        if (debug)
+        {
+            Console.Clear();
+            Print();
+        }
+        
+        var queue = new PriorityQueue<Position, int>();
+        queue.Enqueue(startPosition, 0);
+
+        PathAndScore? result = null;
+        
+        var visited = new HashSet<Position>();
+        foreach (var position in this.Where(x => x.Value == WallMarker).Select(x => x.Position))
+        {
+            visited.Add(position);
+        }
+
+        while (queue.TryDequeue(out var current, out var score))
+        {
+            visited.Add(current);
+            
+            foreach (var neighbour in GetNeighbours(current))
+            {
+                var newScore = score + 1;
+                if (result != null && result.Score < newScore)
+                {
+                    continue;
+                }
+                
+                if (visited.Any(p => p.X == neighbour.X && p.Y == neighbour.Y))
+                {
+                    continue;
+                }
+                
+                var neighbourWithParent = neighbour with { Parent = current };
+                
+                if (neighbour == endPosition)
+                {
+                    var path = neighbourWithParent.ExtractPath(reverse: true).ToArray();
+                    
+                    if (result == null || result.Score > newScore)
+                    {
+                        result = new PathAndScore(path, newScore);
+                    }
+                    
+                    continue;
+                }
+                
+                visited.Add(neighbour);
+                queue.Enqueue(neighbourWithParent, newScore);
+
+                if (debug)
+                {
+                    var pathWithColor = neighbourWithParent.ExtractPath().Select(p => (p, ConsoleColor.Yellow)).ToList();
+                    pathWithColor[0] = (pathWithColor[0].Item1, ConsoleColor.Cyan);
+                    ShowPath(pathWithColor);
+                    Thread.Sleep(50);
+                }
+            }
+        }
+        
+        return result;
+    }
+    
+    private IEnumerable<Position>? _prevPositions;
+
+    private void ShowPath(IEnumerable<(Position, ConsoleColor)> positions)
+    {
+        if (_prevPositions?.Any() == true)
+        {
+            Console.BackgroundColor = ConsoleColor.Gray;
+            foreach (var position in _prevPositions)
+            {
+                Console.SetCursorPosition(position.X, position.Y);
+                Console.Write(this[position]);
+            }
+        }
+
+        foreach (var (position, color) in positions)
+        {
+            Console.SetCursorPosition(position.X, position.Y);
+            Console.BackgroundColor = color;
+            Console.Write(this[position]);
+        }
+
+        _prevPositions = positions.Select(x => x.Item1);
     }
 }

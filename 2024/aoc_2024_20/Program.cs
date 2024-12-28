@@ -4,11 +4,7 @@ namespace aoc_2024_20;
 
 internal class Program
 {
-    private const char WallMarker = '#';
-    private const char StartMarker = 'S';
-    private const char EndMarker = 'E';
-    
-    private static void Main()
+   private static void Main()
     {
         Console.WriteLine("Advent of Code 2024 - Day 20");
         
@@ -25,12 +21,12 @@ internal class Program
     {
         var map = new Map(inputFile);
         
-        var startPosition = map.Single(x => x.Value == StartMarker).Position;
-        var endPosition = map.Single(x => x.Value == EndMarker).Position;
+        var startPosition = map.Single(x => x.Value == Map.StartMarker).Position;
+        var endPosition = map.Single(x => x.Value == Map.EndMarker).Position;
         
         Console.WriteLine($"Looking for path from {startPosition} to {endPosition} on {map.XMax}x{map.YMax} map.");
         
-        var pathAndScore = FindPath(map, startPosition, endPosition, debug: false);
+        var pathAndScore = map.FindPath(startPosition, endPosition, debug: false);
         
         if (pathAndScore == null)
         {
@@ -64,73 +60,5 @@ internal class Program
         }
 
         return count;
-    }
-    
-    // https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm
-    private static PathAndScore? FindPath(Map map, Position startPosition, Position endPosition, bool debug = false)
-    {
-        if (debug)
-        {
-            Console.Clear();
-            map.Print();
-        }
-        
-        var queue = new PriorityQueue<Position, int>();
-        queue.Enqueue(startPosition, 0);
-
-        PathAndScore? result = null;
-        
-        var visited = new HashSet<Position>();
-        foreach (var position in map.Where(x => x.Value == WallMarker).Select(x => x.Position))
-        {
-            visited.Add(position);
-        }
-
-        while (queue.TryDequeue(out var current, out var score))
-        {
-            visited.Add(current);
-            
-            foreach (var neighbour in map.GetNeighbours(current))
-            {
-                var newScore = score + 1;
-                if (result != null && result.Score < newScore)
-                {
-                    continue;
-                }
-                
-                if (visited.Any(p => p.X == neighbour.X && p.Y == neighbour.Y))
-                {
-                    continue;
-                }
-                
-                var neighbourWithParent = neighbour with { Parent = current };
-                
-                if (neighbour == endPosition)
-                {
-                    var path = neighbourWithParent.ExtractPath(reverse: true).ToArray();
-                    
-                    if (result == null || result.Score > newScore)
-                    {
-                        result = new PathAndScore(path, newScore);
-                    }
-                    
-                    continue;
-                }
-                
-                visited.Add(neighbour);
-                queue.Enqueue(neighbourWithParent, newScore);
-
-                if (debug)
-                {
-                    var pathWithColor = neighbourWithParent.ExtractPath().Select(p => (p, ConsoleColor.Yellow)).ToList();
-                    pathWithColor[0] = (pathWithColor[0].Item1, ConsoleColor.Cyan);
-                    //PrintMapWithPath(map, pathWithColor);
-                    //ShowPath(map, pathWithColor);
-                    Thread.Sleep(50);
-                }
-            }
-        }
-        
-        return result;
     }
 }
