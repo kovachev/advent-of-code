@@ -263,6 +263,7 @@ public class Map: IEnumerable<(Position Position, char Value)>
                 }
                 
                 visited.Add(neighbour);
+                
                 queue.Enqueue(neighbourWithParent, newScore);
 
                 if (debug)
