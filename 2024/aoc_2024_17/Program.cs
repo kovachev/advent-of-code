@@ -4,7 +4,7 @@ namespace aoc_2024_17;
 
 public class Program
 {
-    private static readonly Dictionary<int, Func<ProcessorState, ProcessorState>> _operations = new()
+    private static readonly Dictionary<long, Func<ProcessorState, ProcessorState>> _operations = new()
     {
         { 0, Adv },
         { 1, Bxl },
@@ -24,19 +24,21 @@ public class Program
         
         var input = new ProcessorState(0, 44348299, 0, 0, [2, 4, 1, 5, 7, 5, 1, 6, 0, 3, 4, 2, 5, 5, 3, 0]);
         
-        Console.WriteLine($"Part 1 (sample): {Part1(sample).Output}");
+        Console.WriteLine($"Part 1 (sample): {ExecuteProgram(sample).Output}");
         
-        Console.WriteLine($"Part 1 (input): {Part1(input).Output}");
+        Console.WriteLine($"Part 1 (input): {ExecuteProgram(input).Output}");
         
         var sample2 = new ProcessorState(0, 117440, 0, 0, [0, 3, 5, 4, 3, 0]);
         
-        Console.WriteLine($"Part 1 (sample2): {Part1(sample2).Output}");
+        Console.WriteLine($"Part 1 (sample2): {ExecuteProgram(sample2).Output}");
         
         Console.WriteLine();
         Console.WriteLine(ToHumanReadableCode(input.Instructions));
+        
+        Part2(input);
     }
 
-    private static ProcessorState Part1(ProcessorState processorState)
+    private static ProcessorState ExecuteProgram(ProcessorState processorState)
     {
         var state = processorState with { };
         
@@ -47,8 +49,40 @@ public class Program
 
         return state;
     }
+    
+    private static void Part2(ProcessorState processorState)
+    {
+        var possibleValues = ReverseModulo(processorState.Instructions, processorState.Instructions).ToArray();
+        
+        Console.WriteLine($"Part 2: {possibleValues.Min()}");
+    }
 
-    private static string ToHumanReadableCode(int[] instructions)
+    private static IEnumerable<long> ReverseModulo(long[] instructions, long[] output)
+    {
+        if (!output.Any())
+        {
+            yield return 0;
+            yield break;
+        }
+
+        foreach (var value in ReverseModulo(instructions, output[1..]))
+        {
+            var expectedOutput = string.Join(",", output);
+            
+            for (var remainder = 0; remainder < 8; remainder++)
+            {
+                var a = value * 8 + remainder;
+                
+                var processorState = ExecuteProgram(new ProcessorState(0, a, 0, 0, instructions.ToArray()));
+                if (processorState.Output == expectedOutput)
+                {
+                    yield return a;
+                }
+            }
+        }
+    }
+
+    private static string ToHumanReadableCode(long[] instructions)
     {
         var result = new StringBuilder();
         
@@ -64,7 +98,7 @@ public class Program
                 5 => "OUT",
                 6 => "BDV",
                 7 => "CDV",
-                _ => throw new Exception()
+                _ => throw new ArgumentOutOfRangeException()
             };
 
             var operand = instructions[i + 1] switch
@@ -76,7 +110,7 @@ public class Program
                 4 => "A",
                 5 => "B",
                 6 => "C",
-                _ => throw new Exception()
+                _ => throw new ArgumentOutOfRangeException()
             };
 
             if (instructions[i] is 1 or 3)
@@ -98,7 +132,7 @@ public class Program
     {
         var value = GetValue(processorState);
 
-        var result = (int) (processorState.A / Math.Pow(2, value));
+        var result = (long) (processorState.A / Math.Pow(2, value));
         
         return processorState with
         {
@@ -183,7 +217,7 @@ public class Program
         return processorState with
         {
             InstructionPointer = processorState.InstructionPointer + 2,
-            B = (int)result
+            B = (long)result
         };
     }
     
@@ -196,10 +230,10 @@ public class Program
         return processorState with
         {
             InstructionPointer = processorState.InstructionPointer + 2,
-            C = (int)result
+            C = (long)result
         };
     }
-    private static int GetValue(ProcessorState processorState)
+    private static long GetValue(ProcessorState processorState)
     {
         var operand = processorState.Instructions[processorState.InstructionPointer + 1];
         
@@ -212,18 +246,25 @@ public class Program
             4 => processorState.A,
             5 => processorState.B,
             6 => processorState.C,
-            _ => throw new Exception("Invalid state")
+            _ => throw new InvalidStateException()
         };
     }
 }
 
 internal record ProcessorState(
-    int InstructionPointer,
-    int A,
-    int B,
-    int C,
-    int[] Instructions,
+    long InstructionPointer,
+    long A,
+    long B,
+    long C,
+    long[] Instructions,
     string Output = "")
 {
     public bool CanExecute => InstructionPointer < Instructions.Length;
 };
+
+internal class InvalidStateException : Exception
+{
+    public InvalidStateException() : base("Processor is in an invalid state.")
+    {
+    }
+}
