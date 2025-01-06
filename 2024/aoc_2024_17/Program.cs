@@ -2,133 +2,155 @@
 
 public class Program
 {
+    private static readonly Dictionary<int, Func<ProcessorState, ProcessorState>> _operations = new()
+    {
+        { 0, Adv },
+        { 1, Bxl },
+        { 2, Bst },
+        { 3, Jnz },
+        { 4, Bxc },
+        { 5, Out },
+        { 6, Bdv },
+        { 7, Cdv }
+    };
+    
     private static void Main()
     {
         Console.WriteLine("Advent of Code 2024 - Day 17");
         
-        var sample = new Processor(0, 729, 0, 0, [0, 1, 5, 4, 3, 0]);
-
-        var input = new Processor(0, 44348299, 0, 0, [2, 4, 1, 5, 7, 5, 1, 6, 0, 3, 4, 2, 5, 5, 3, 0]);
+        var sample = new ProcessorState(0, 729, 0, 0, [0, 1, 5, 4, 3, 0]);
         
-        Dictionary<int, Func<Processor, Processor>> operations = new()
-        {
-            {0, Adv},
-            {1, Bxl},
-            {2, Bst},
-            {3, Jnz},
-            {4, Bxc},
-            {5, Out},
-            {6, Bdv},
-            {7, Cdv}
-        };
-
-        while (sample.CanExecute)
-        {
-            sample = operations[sample.Instructions[sample.InstructionPointer]](sample);
-        }
+        var input = new ProcessorState(0, 44348299, 0, 0, [2, 4, 1, 5, 7, 5, 1, 6, 0, 3, 4, 2, 5, 5, 3, 0]);
+        
+        Console.WriteLine($"Part 1 (sample): {Part1(sample).Output}");
+        
+        Console.WriteLine($"Part 1 (input): {Part1(input).Output}");
+        
+        var sample2 = new ProcessorState(0, 117440, 0, 0, [0, 3, 5, 4, 3, 0]);
+        
+        Console.WriteLine($"Part 1 (sample2): {Part1(sample2).Output}");
     }
 
-    private static Processor Adv(Processor processor)
+    private static ProcessorState Part1(ProcessorState processorState)
     {
-        var value = GetValue(processor);
-
-        var result = processor.A / Math.Pow(2, value);
+        var state = processorState with { };
         
-        return processor with
+        while (state.CanExecute)
         {
-            InstructionPointer = processor.InstructionPointer + 2,
-            A = (int) result
+            state = _operations[state.Instructions[state.InstructionPointer]](state);
+        }
+
+        return state;
+    }
+
+    private static ProcessorState Adv(ProcessorState processorState)
+    {
+        var value = GetValue(processorState);
+
+        var result = (int) (processorState.A / Math.Pow(2, value));
+        
+        return processorState with
+        {
+            InstructionPointer = processorState.InstructionPointer + 2,
+            A = result
         };
     }
     
-    private static Processor Bxl(Processor processor)
+    private static ProcessorState Bxl(ProcessorState processorState)
     {
-        var value = processor.Instructions[processor.InstructionPointer + 1];
+        var value = processorState.Instructions[processorState.InstructionPointer + 1];
 
-        var result = processor.B ^ value;
+        var result = processorState.B ^ value;
         
-        return processor with
+        return processorState with
         {
-            InstructionPointer = processor.InstructionPointer + 2,
+            InstructionPointer = processorState.InstructionPointer + 2,
             B = result
         };
     }
     
-    private static Processor Bst(Processor processor)
+    private static ProcessorState Bst(ProcessorState processorState)
     {
-        var value = GetValue(processor);
+        var value = GetValue(processorState);
 
         var result = value % 8;
         
-        return processor with
+        return processorState with
         {
-            InstructionPointer = processor.InstructionPointer + 2,
+            InstructionPointer = processorState.InstructionPointer + 2,
             B = result
         };
     }
 
-    private static Processor Jnz(Processor processor)
+    private static ProcessorState Jnz(ProcessorState processorState)
     {
-        if (processor.A == 0)
+        if (processorState.A == 0)
         {
-            return processor with { InstructionPointer = processor.InstructionPointer + 2 };
+            return processorState with { InstructionPointer = processorState.InstructionPointer + 2 };
         }
 
-        var value = processor.Instructions[processor.InstructionPointer + 1];
+        var value = processorState.Instructions[processorState.InstructionPointer + 1];
         
-        return processor with { InstructionPointer = processor.InstructionPointer + value };
+        return processorState with { InstructionPointer = value };
     }
 
-    private static Processor Bxc(Processor processor)
+    private static ProcessorState Bxc(ProcessorState processorState)
     {
-        var result = processor.B ^ processor.C;
+        var result = processorState.B ^ processorState.C;
         
-        return processor with
+        return processorState with
         {
-            InstructionPointer = processor.InstructionPointer + 2,
+            InstructionPointer = processorState.InstructionPointer + 2,
             B = result
         };
     }
     
-    private static Processor Out(Processor processor)
+    private static ProcessorState Out(ProcessorState processorState)
     {
-        var value = GetValue(processor);
+        var value = GetValue(processorState);
 
-        var output = value % 8;
+        var output = (value % 8).ToString();
+
+        if (processorState.Output.Length > 0)
+        {
+            output = $"{processorState.Output},{output}";
+        }
         
-        Console.WriteLine(output + ", ");
-        
-        return processor with { InstructionPointer = processor.InstructionPointer + 2 };
+        return processorState with
+        {
+            InstructionPointer = processorState.InstructionPointer + 2,
+            Output = output
+        };
     }
     
-    private static Processor Bdv(Processor processor)
+    private static ProcessorState Bdv(ProcessorState processorState)
     {
-        var value = GetValue(processor);
+        var value = GetValue(processorState);
 
-        var result = processor.A / Math.Pow(2, value);
+        var result = processorState.A / Math.Pow(2, value);
         
-        return processor with
+        return processorState with
         {
-            InstructionPointer = processor.InstructionPointer + 2,
+            InstructionPointer = processorState.InstructionPointer + 2,
             B = (int)result
         };
     }
     
-    private static Processor Cdv(Processor processor)
+    private static ProcessorState Cdv(ProcessorState processorState)
     {
-        var value = GetValue(processor);
+        var value = GetValue(processorState);
 
-        var result = processor.A / Math.Pow(2, value);
+        var result = processorState.A / Math.Pow(2, value);
         
-        return processor with
+        return processorState with
         {
-            InstructionPointer = processor.InstructionPointer + 2,
+            InstructionPointer = processorState.InstructionPointer + 2,
             C = (int)result
         };
     }
-    private static int GetValue(Processor processor)
+    private static int GetValue(ProcessorState processorState)
     {
-        var operand = processor.Instructions[processor.InstructionPointer + 1];
+        var operand = processorState.Instructions[processorState.InstructionPointer + 1];
         
         return operand switch
         {
@@ -136,20 +158,21 @@ public class Program
             1 => 1,
             2 => 2,
             3 => 3,
-            4 => processor.A,
-            5 => processor.B,
-            6 => processor.C,
-            _ => operand
+            4 => processorState.A,
+            5 => processorState.B,
+            6 => processorState.C,
+            _ => throw new Exception("Invalid state")
         };
     }
 }
 
-internal record Processor(
+internal record ProcessorState(
     int InstructionPointer,
     int A,
     int B,
     int C,
-    int[] Instructions)
+    int[] Instructions,
+    string Output = "")
 {
     public bool CanExecute => InstructionPointer < Instructions.Length;
 };
