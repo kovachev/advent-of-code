@@ -1,4 +1,6 @@
-﻿namespace aoc_2024_17;
+﻿using System.Text;
+
+namespace aoc_2024_17;
 
 public class Program
 {
@@ -29,6 +31,9 @@ public class Program
         var sample2 = new ProcessorState(0, 117440, 0, 0, [0, 3, 5, 4, 3, 0]);
         
         Console.WriteLine($"Part 1 (sample2): {Part1(sample2).Output}");
+        
+        Console.WriteLine();
+        Console.WriteLine(ToHumanReadableCode(input.Instructions));
     }
 
     private static ProcessorState Part1(ProcessorState processorState)
@@ -41,6 +46,52 @@ public class Program
         }
 
         return state;
+    }
+
+    private static string ToHumanReadableCode(int[] instructions)
+    {
+        var result = new StringBuilder();
+        
+        for (var i = 0; i < instructions.Length; i += 2)
+        {
+            var opcode = instructions[i] switch
+            {
+                0 => "ADV",
+                1 => "BXL",
+                2 => "BST",
+                3 => "JNZ",
+                4 => "BXC",
+                5 => "OUT",
+                6 => "BDV",
+                7 => "CDV",
+                _ => throw new Exception()
+            };
+
+            var operand = instructions[i + 1] switch
+            {
+                0 => "0",
+                1 => "1",
+                2 => "2",
+                3 => "3",
+                4 => "A",
+                5 => "B",
+                6 => "C",
+                _ => throw new Exception()
+            };
+
+            if (instructions[i] is 1 or 3)
+            {
+                operand = instructions[i + 1].ToString();
+            } 
+            else if (instructions[i] is 4)
+            {
+                operand = "";
+            }
+            
+            result.AppendLine($"{opcode} {operand}");
+        }
+
+        return result.ToString();
     }
 
     private static ProcessorState Adv(ProcessorState processorState)
