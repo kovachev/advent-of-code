@@ -92,7 +92,8 @@ internal class Program
                 continue;
             }
             
-            if (sequence.Length > 1 && !nodes[neighbor].Contains(sequence[0]))
+            if (sequence.Length > 1 && 
+                !sequence.All(x => nodes[neighbor].Contains(x)))
             {
                 continue;
             }
