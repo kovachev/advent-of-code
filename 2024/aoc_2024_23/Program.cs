@@ -12,12 +12,16 @@ internal class Program
         
         Part1(nodes);
 
+        Part2(nodes);
+        
         Console.WriteLine();
         Console.WriteLine();
         
         nodes = Load("input.txt");
 
         Part1(nodes);
+        
+        Part2(nodes);
     }
 
     private static void Part1(Nodes nodes)
@@ -45,14 +49,39 @@ internal class Program
         sequences = sequences.Distinct()
                              .ToList();
 
-        foreach (var sequence in sequences)
-        {
-            Console.WriteLine($"Sequence for {sequence[..2]}: {sequence}");
-        }
+        // foreach (var sequence in sequences)
+        // {
+        //     Console.WriteLine($"Sequence for {sequence[..2]}: {sequence}");
+        // }
         
         Console.WriteLine($"Total sequences: {sequences.Count}");
     }
 
+    private static void Part2(Nodes nodes)
+    {
+        string[]? sequence = null;
+
+        foreach (var node in nodes)
+        {
+            foreach (var next in GetNext(nodes, [node.Key], true))
+            {
+                if (sequence == null || next.Count() > sequence.Length)
+                {
+                    sequence = next.ToArray();
+                }
+                
+                break;
+            }
+        }
+        
+        if (sequence == null)
+        {
+            return;
+        }
+        
+        Console.WriteLine($"Part 2: {string.Join(",", sequence.Order())}");
+    }
+    
     private static Nodes Load(string inputFile)
     {
         var input = File.ReadAllLines(inputFile);
@@ -80,10 +109,12 @@ internal class Program
         }
 
         Console.WriteLine($"Total nodes: {nodes.Count}");
-        return nodes;
+        
+        return nodes.OrderBy(x => x.Key)
+                    .ToDictionary(x => x.Key, x => x.Value.Distinct().Order().ToHashSet());
     }
 
-    private static IEnumerable<IEnumerable<string>> GetNext(Nodes nodes, string[] sequence)
+    private static IEnumerable<IEnumerable<string>> GetNext(Nodes nodes, string[] sequence, bool recurse = false)
     {
         foreach (var neighbor in nodes[sequence.Last()])
         {
@@ -98,7 +129,17 @@ internal class Program
                 continue;
             }
                 
-            yield return sequence.Append(neighbor);
+            var next = sequence.Append(neighbor).ToArray();
+            
+            if (recurse)
+            {
+                foreach (var nextNext in GetNext(nodes, next, true))
+                {
+                    yield return nextNext;
+                }
+            }
+
+            yield return next;
         }
     }
 }
